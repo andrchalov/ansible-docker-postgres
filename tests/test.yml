@@ -1,0 +1,39 @@
+---
+# master server
+- hosts: all
+  roles:
+    - name: role_under_test
+      docker_postgres_dir: /srv/master
+      docker_postgres_container_name: master
+      docker_postgres_replication_slots: [slave]
+      docker_postgres_network_mode: host
+
+# slave server
+- hosts: all
+  roles:
+    - name: role_under_test
+      docker_postgres_dir: /srv/slave
+      docker_postgres_container_name: slave
+      docker_postgres_port: 5433
+      docker_postgres_slave: true
+      docker_postgres_primary_host: 127.0.0.1
+      docker_postgres_primary_slot_name: slave
+      docker_postgres_network_mode: host
+
+  post_tasks:
+    - name: Testing replication
+      shell:
+        docker exec master psql -U postgres -1tq -c "
+          DROP TABLE IF EXISTS test;
+          CREATE TABLE test (id timestamp);
+          INSERT INTO test (id) VALUES (now()) RETURNING id;"
+      register: _test_push
+
+    - name: Check replication
+      shell:
+        docker exec slave psql -U postgres -p 5433 -1tq -c "
+          SELECT id FROM test WHERE pg_is_in_recovery();"
+      register: _test_pull
+
+    - assert:
+        that: _test_push.stdout == _test_pull.stdout
