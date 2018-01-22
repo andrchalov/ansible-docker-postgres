@@ -18,6 +18,13 @@
   fail: msg="data folder is not empty, but PG_VERSION file missing"
   when: __data_folder.files|length != 0 and not __pg_version.stat.exists
 
+- name: Ensure required pip modules installed
+  pip:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - psycopg2
+
 - block:
   # Initialize database cluster if not yet initialized.
   # Docker container can initialize cluster, but it is better to make a more
@@ -72,13 +79,16 @@
     image: "{{docker_postgres_image}}"
     volumes:
       - "{{docker_postgres_dir}}:/mnt:rw"
+    env:
+      PGPASSWORD: "{{docker_postgres_primary_password}}"
     state: started
     network_mode: host
     command: "
-      gosu postgres pg_basebackup -U postgres -h {{docker_postgres_primary_host}}
+      gosu postgres pg_basebackup -U {{docker_postgres_primary_user}} -h {{docker_postgres_primary_host}}
         -p {{docker_postgres_primary_port}} -S {{docker_postgres_primary_slot_name}}
         -D /mnt/{{docker_postgres_data_dir}}"
     detach: false
+  register: __out
   when:
     - docker_postgres_slave
     - __pg_version.stat is not defined or not __pg_version.stat.exists
@@ -89,11 +99,14 @@
     dest: "{{docker_postgres_dir}}/{{docker_postgres_data_dir}}/postgresql.conf"
   notify: plan to restart
 
-- name: Create pg_hba.conf
+- name: Configure host based authentication (if entries are configured).
   template:
-    src: "{{docker_postgres_conf_pghba}}"
+    src: "pg_hba.conf.j2"
     dest: "{{docker_postgres_dir}}/{{docker_postgres_data_dir}}/pg_hba.conf"
+    owner: "999"
+    mode: 0600
   notify: plan to restart
+  when: docker_postgres_hba_entries
 
 - name: Ensure recovery.conf not exists
   file:
@@ -156,3 +169,6 @@
   when:
     - not docker_postgres_slave
     - docker_postgres_replication_slots is defined
+
+- import_tasks: users.yml
+  when: not docker_postgres_slave

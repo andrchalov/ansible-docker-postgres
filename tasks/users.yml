@@ -1,0 +1,15 @@
+---
+- name: Ensure PostgreSQL users are present.
+  postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password | default(omit) }}"
+    priv: "{{ item.priv | default(omit) }}"
+    role_attr_flags: "{{ item.role_attr_flags | default(omit) }}"
+    encrypted: yes
+    db: "{{ item.db | default(omit) }}"
+    login_host: "172.18.0.1"
+    login_password: "{{ docker_postgres_password }}"
+    login_user: "postgres"
+    state: "{{ item.state | default('present') }}"
+  with_items: "{{ docker_postgres_users }}"
+  # no_log: true

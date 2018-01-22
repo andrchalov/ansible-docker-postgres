@@ -17,7 +17,16 @@ docker_postgres_conf_recovery: recovery.conf
 docker_postgres_primary_port: 5432
 docker_postgres_primary_user: postgres
 docker_postgres_primary_password: ''
-docker_postgres_primary_conninfo: "host={{docker_postgres_primary_host}} port={{docker_postgres_primary_port}} user={{docker_postgres_primary_user}} password={{docker_postgres_primary_password}} sslmode=require"
+docker_postgres_primary_sslmode: require
+docker_postgres_primary_conninfo: "host={{docker_postgres_primary_host}} port={{docker_postgres_primary_port}} user={{docker_postgres_primary_user}} password={{docker_postgres_primary_password}} sslmode={{docker_postgres_primary_sslmode}}"
 docker_postgres_trigger_file: 'stop_replication_trigger'
+
+docker_postgres_hba_entries:
+  - { type: local, database: all, user: postgres, auth_method: peer }
+  - { type: local, database: all, user: all, auth_method: peer }
+  - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5 }
+  - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
+
+docker_postgres_users: []
 
 docker_postgres_scripts_dir: ".ansible"
