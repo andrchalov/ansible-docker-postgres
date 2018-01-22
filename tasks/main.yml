@@ -18,13 +18,6 @@
   fail: msg="data folder is not empty, but PG_VERSION file missing"
   when: __data_folder.files|length != 0 and not __pg_version.stat.exists
 
-- name: Ensure required pip modules installed
-  pip:
-    name: "{{item}}"
-    state: present
-  with_items:
-    - psycopg2
-
 - block:
   # Initialize database cluster if not yet initialized.
   # Docker container can initialize cluster, but it is better to make a more
