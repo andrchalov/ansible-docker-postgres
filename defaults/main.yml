@@ -28,5 +28,6 @@ docker_postgres_hba_entries:
   - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
 
 docker_postgres_users: []
+docker_postgres_databases: []
 
 docker_postgres_scripts_dir: ".ansible"

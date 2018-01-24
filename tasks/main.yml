@@ -172,3 +172,6 @@
 
 - import_tasks: users.yml
   when: not docker_postgres_slave
+
+- import_tasks: databases.yml
+  when: not docker_postgres_slave
