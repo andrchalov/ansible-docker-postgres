@@ -6,6 +6,10 @@
     owner="999"
     state=directory
 
+- name: Ensure psycopg2 module installed
+  pip:
+    name: psycopg2
+
 - name: Read data folder
   find: path="{{docker_postgres_dir}}/{{docker_postgres_data_dir}}"
   register: __data_folder
