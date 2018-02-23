@@ -80,6 +80,7 @@ docker_postgres_conf_max_replication_slots: 10
 docker_postgres_conf_synchronous_standby_names: ''
 docker_postgres_conf_hot_standby: on                # "off" disallows queries during recovery
 docker_postgres_conf_max_standby_archive_delay: 30s
+docker_postgres_conf_hot_standby_feedback: off      # send info from standby to prevent
 
 # ERROR REPORTING AND LOGGING
 
