@@ -51,6 +51,7 @@ docker_postgres_conf_huge_pages: try                          # on, off, or try
 docker_postgres_conf_temp_buffers: 8MB                        # min 800kB
 docker_postgres_conf_max_prepared_transactions: 0
 docker_postgres_conf_work_mem: 4MB
+docker_postgres_conf_max_stack_depth: 2MB
 docker_postgres_conf_maintenance_work_mem: 64MB
 docker_postgres_conf_shared_preload_libraries: ''
 
