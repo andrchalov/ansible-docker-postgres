@@ -6,6 +6,10 @@
     owner="999"
     state=directory
 
+- name: Install required apt packages
+  apt:
+    name: ['libpq-dev', 'python3-dev']
+
 - name: Ensure psycopg2 module installed
   pip:
     name: psycopg2
