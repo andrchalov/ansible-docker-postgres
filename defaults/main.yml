@@ -3,6 +3,7 @@ docker_postgres_image: andrchalov/docker-postgres:latest
 docker_postgres_data_dir: data
 docker_postgres_slave: false
 docker_postgres_container_name: postgres
+docker_postgres_host: 172.18.0.1
 docker_postgres_port: 5432
 docker_postgres_password: ''
 
