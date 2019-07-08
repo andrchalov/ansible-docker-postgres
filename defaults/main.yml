@@ -44,6 +44,9 @@ docker_postgres_conf_authentication_timeout: 1min             # 1s-600s
 docker_postgres_conf_ssl: on                                  # on, off
 docker_postgres_conf_ssl_chiphers: 'HIGH:MEDIUM:+3DES:!aNULL'
 docker_postgres_conf_password_encryption: md5                 # md5 or scram-sha-256
+docker_postgres_conf_tcp_keepalives_idle: 0
+docker_postgres_conf_tcp_keepalives_interval: 0
+docker_postgres_conf_tcp_keepalives_count: 0
 
 # RESOURCE USAGE
 docker_postgres_conf_shared_buffers: 128MB                    # min 128kB
