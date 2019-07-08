@@ -8,7 +8,7 @@
 
 - name: Install required apt packages
   apt:
-    name: ['libpq-dev', 'python3-dev']
+    name: ['libpq-dev', 'python3-dev', 'postgresql-client-10']
 
 - name: Ensure psycopg2 module installed
   pip:
