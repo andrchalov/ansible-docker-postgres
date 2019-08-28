@@ -18,7 +18,7 @@ container_id=${container_id:-$timestamp}
 # Run the container using the supplied OS.
 printf ${green}"Starting Docker container: andrchalov/docker-ansible:latest."${neutral}"\n"
 docker pull andrchalov/docker-ansible:latest
-docker run --detach -v="$docker_lib_volume" --volume="$PWD":/etc/ansible/roles/role_under_test:rw --privileged --name $container_id $opts andrchalov/docker-ansible:latest $init
+docker run --detach --volume="$PWD":/etc/ansible/roles/role_under_test:rw --privileged --name $container_id $opts andrchalov/docker-ansible:latest $init
 
 printf "\n"
 
