@@ -9,12 +9,6 @@ green='\033[0;32m'
 neutral='\033[0m'
 
 timestamp=$(date +%s)
-docker_lib_volume="/var/lib/docker"
-
-if [ "$container_id" ]; then
-  docker_lib_volume="${container_id}_volume:/var/lib/docker"
-
-fi
 
 # Allow environment variables to override defaults.
 playbook=${playbook:-"test.yml"}

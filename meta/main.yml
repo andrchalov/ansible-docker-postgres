@@ -1,0 +1,14 @@
+galaxy_info:
+  author: Andrey Chalov
+  description: Configuring and running PostgreSQL docker container.
+  license: "license (BSD, MIT)"
+  min_ansible_version: 2.4
+  platforms:
+    - name: Ubuntu
+      versions:
+        - 16.04
+        - 18.04
+  galaxy_tags:
+    - docker
+    - postgresql
+    - ubuntu
