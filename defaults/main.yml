@@ -3,6 +3,7 @@ docker_postgres_image: andrchalov/docker-postgres:latest
 docker_postgres_data_dir: data
 docker_postgres_slave: false
 docker_postgres_container_name: postgres
+docker_postgres_host: 172.18.0.1
 docker_postgres_port: 5432
 docker_postgres_password: ''
 
@@ -13,6 +14,7 @@ docker_postgres_published_ports: []
 docker_postgres_conf: postgresql.conf
 docker_postgres_conf_pghba: pg_hba.conf
 docker_postgres_conf_recovery: recovery.conf
+
 
 docker_postgres_primary_port: 5432
 docker_postgres_primary_user: postgres
@@ -28,5 +30,72 @@ docker_postgres_hba_entries:
   - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
 
 docker_postgres_users: []
+docker_postgres_databases: []
 
 docker_postgres_scripts_dir: ".ansible"
+
+#------------------------------------------------------------------------------
+# postgres.conf configuration
+#------------------------------------------------------------------------------
+
+# CONNECTIONS AND AUTHENTICATION
+docker_postgres_conf_max_connections: 100
+docker_postgres_conf_superuser_reserved_connections: 3
+docker_postgres_conf_authentication_timeout: 1min             # 1s-600s
+docker_postgres_conf_ssl: on                                  # on, off
+docker_postgres_conf_ssl_chiphers: 'HIGH:MEDIUM:+3DES:!aNULL'
+docker_postgres_conf_password_encryption: md5                 # md5 or scram-sha-256
+docker_postgres_conf_tcp_keepalives_idle: 0
+docker_postgres_conf_tcp_keepalives_interval: 0
+docker_postgres_conf_tcp_keepalives_count: 0
+
+# RESOURCE USAGE
+docker_postgres_conf_shared_buffers: 128MB                    # min 128kB
+docker_postgres_conf_huge_pages: try                          # on, off, or try
+docker_postgres_conf_temp_buffers: 8MB                        # min 800kB
+docker_postgres_conf_max_prepared_transactions: 0
+docker_postgres_conf_work_mem: 4MB
+docker_postgres_conf_max_stack_depth: 2MB
+docker_postgres_conf_maintenance_work_mem: 64MB
+docker_postgres_conf_shared_preload_libraries: ''
+
+# WRITE AHEAD LOG
+docker_postgres_conf_synchronous_commit: on
+docker_postgres_conf_wal_compression: off
+docker_postgres_conf_wal_writer_delay: 200ms        # 1-10000 milliseconds
+docker_postgres_conf_wal_writer_flush_after: 1MB    # measured in pages, 0 disables
+docker_postgres_conf_commit_delay: 0                # range 0-100000, in microseconds
+docker_postgres_conf_commit_siblings: 5             # range 1-1000
+docker_postgres_conf_checkpoint_timeout: 5min       # range 30s-1d
+docker_postgres_conf_max_wal_size: 1GB
+docker_postgres_conf_min_wal_size: 80MB
+docker_postgres_conf_checkpoint_completion_target: 0.5   # checkpoint target duration, 0.0 - 1.0
+docker_postgres_conf_checkpoint_flush_after: 256kB       # measured in pages, 0 disables
+docker_postgres_conf_checkpoint_waiting: 30s             # 0 disables
+docker_postgres_conf_archive_mode: off                   # enables archiving; off, on, or always
+docker_postgres_conf_archive_command: ''
+docker_postgres_conf_archive_timeout: 0
+
+# REPLICATION
+
+docker_postgres_conf_max_wal_senders: 10            # max number of walsender processes
+docker_postgres_conf_wal_keep_segments: 0           # in logfile segments, 16MB each; 0 disables
+docker_postgres_conf_wal_sender_timeout: 60s        # in milliseconds; 0 disables
+docker_postgres_conf_max_replication_slots: 10
+docker_postgres_conf_synchronous_standby_names: ''
+docker_postgres_conf_hot_standby: on                # "off" disallows queries during recovery
+docker_postgres_conf_max_standby_archive_delay: 30s
+docker_postgres_conf_hot_standby_feedback: off      # send info from standby to prevent
+
+# ERROR REPORTING AND LOGGING
+
+docker_postgres_conf_log_destination: 'stderr'
+docker_postgres_conf_client_min_messages: error
+docker_postgres_conf_log_min_messages: error
+docker_postgres_conf_log_min_error_statement: error
+docker_postgres_conf_log_timezone: 'UTC'
+
+# CLIENT CONNECTION DEFAULTS
+
+docker_postgres_conf_timezone: 'UTC'
+docker_postgres_conf_default_text_search_config: 'pg_catalog.english'

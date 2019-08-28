@@ -6,6 +6,14 @@
     owner="999"
     state=directory
 
+- name: Install required apt packages
+  apt:
+    name: ['libpq-dev', 'python3-dev', 'postgresql-client-10']
+
+- name: Ensure psycopg2 module installed
+  pip:
+    name: psycopg2
+
 - name: Read data folder
   find: path="{{docker_postgres_dir}}/{{docker_postgres_data_dir}}"
   register: __data_folder
@@ -164,4 +172,7 @@
     - docker_postgres_replication_slots is defined
 
 - import_tasks: users.yml
+  when: not docker_postgres_slave
+
+- import_tasks: databases.yml
   when: not docker_postgres_slave
