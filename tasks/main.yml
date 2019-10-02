@@ -1,13 +1,13 @@
 ---
 - name: Create data folder
   file:
-    dest="{{docker_postgres_dir}}/{{docker_postgres_data_dir}}"
+    dest="{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}"
     mode="0700"
     owner="999"
     state=directory
 
 - name: Install required apt packages
-  apt:
+  package:
     name: ['libpq-dev', 'python3-dev', 'postgresql-client-10']
 
 - name: Ensure psycopg2 module installed
@@ -15,11 +15,11 @@
     name: psycopg2
 
 - name: Read data folder
-  find: path="{{docker_postgres_dir}}/{{docker_postgres_data_dir}}"
+  find: path="{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}"
   register: __data_folder
 
 - name: Find PG_VERSION file
-  stat: path="{{docker_postgres_dir}}/{{docker_postgres_data_dir}}/PG_VERSION"
+  stat: path="{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/PG_VERSION"
   register: __pg_version
 
 - name: Check PG_VERSION file
@@ -27,67 +27,68 @@
   when: __data_folder.files|length != 0 and not __pg_version.stat.exists
 
 - block:
-  # Initialize database cluster if not yet initialized.
-  # Docker container can initialize cluster, but it is better to make a more
-  # explicit here in temporary container.
-  - name: Initialize new primary postgres cluster
-    docker_container:
-      name: docker_postgres_initdb
-      image: "{{docker_postgres_image}}"
-      volumes:
-        - "{{docker_postgres_dir}}:/mnt"
-      env:
-        PGDATA: "/mnt/{{docker_postgres_data_dir}}"
-        POSTGRES_PASSWORD: "{{docker_postgres_password}}"
-        POSTGRES_INITONLY: "true"
-      pull: true
-      state: started
-      interactive: true
-      detach: false
-    when: not __pg_version.stat.exists
+    # Initialize database cluster if not yet initialized.
+    # Docker container can initialize cluster, but it is better to make a more
+    # explicit here in temporary container.
+    - name: Initialize new primary postgres cluster
+      docker_container:
+        name: docker_postgres_initdb
+        image: "{{ docker_postgres_image }}"
+        volumes:
+          - "{{ docker_postgres_dir }}:/mnt"
+        env:
+          PGDATA: "/mnt/{{ docker_postgres_data_dir }}"
+          POSTGRES_PASSWORD: "{{ docker_postgres_password }}"
+          POSTGRES_INITONLY: "true"
+        pull: true
+        state: started
+        interactive: true
+        detach: false
+      when: not __pg_version.stat.exists
 
-  - name: Check that postgres cluster initialized
-    stat: path="{{docker_postgres_dir}}/{{docker_postgres_data_dir}}/PG_VERSION"
-    register: __pg_cluster
+    - name: Check that postgres cluster initialized
+      stat: path="{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/PG_VERSION"
+      register: __pg_cluster
 
-  - assert:
-      that: __pg_cluster.stat.exists
+    - name: Assert cluster should be initialized
+      assert:
+        that: __pg_cluster.stat.exists
 
-  - name: Remove postgres initialization contatiner
-    docker_container:
-      name: docker_postgres_initdb
-      image: "{{docker_postgres_image}}"
-      state: absent
+    - name: Remove postgres initialization contatiner
+      docker_container:
+        name: docker_postgres_initdb
+        image: "{{ docker_postgres_image }}"
+        state: absent
 
-  - name: Generate postgres default self-signed certificate
-    shell: creates={{docker_postgres_dir}}/{{docker_postgres_data_dir}}/server.crt
-      openssl req
-        -x509
-        -nodes
-        -days 3650
-        -subj '/C=CA/ST=QC/L=Montreal/O=Company Name/CN={{inventory_hostname}}'
-        -newkey rsa:1024
-        -keyout {{docker_postgres_dir}}/{{docker_postgres_data_dir}}/server.key
-        -out {{docker_postgres_dir}}/{{docker_postgres_data_dir}}/server.crt
-      && chmod 600 {{docker_postgres_dir}}/{{docker_postgres_data_dir}}/server.key {{docker_postgres_dir}}/{{docker_postgres_data_dir}}/server.crt
-      && chown 999 {{docker_postgres_dir}}/{{docker_postgres_data_dir}}/server.key {{docker_postgres_dir}}/{{docker_postgres_data_dir}}/server.crt
-    notify: plan to restart
+    - name: Generate postgres default self-signed certificate
+      shell: creates={{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.crt
+        openssl req
+          -x509
+          -nodes
+          -days 3650
+          -subj '/C=CA/ST=QC/L=Montreal/O=Company Name/CN={{ inventory_hostname }}'
+          -newkey rsa:1024
+          -keyout {{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.key
+          -out {{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.crt
+        && chmod 600 {{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.key {{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.crt
+        && chown 999 {{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.key {{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.crt
+      notify: plan to restart
   when: not docker_postgres_slave
 
 - name: Fetching base backup from master
   docker_container:
     name: docker_postgres_basebackup
-    image: "{{docker_postgres_image}}"
+    image: "{{ docker_postgres_image }}"
     volumes:
-      - "{{docker_postgres_dir}}:/mnt:rw"
+      - "{{ docker_postgres_dir }}:/mnt:rw"
     env:
-      PGPASSWORD: "{{docker_postgres_primary_password}}"
+      PGPASSWORD: "{{ docker_postgres_primary_password }}"
     state: started
     network_mode: host
     command: "
-      gosu postgres pg_basebackup -U {{docker_postgres_primary_user}} -h {{docker_postgres_primary_host}}
-        -p {{docker_postgres_primary_port}} -S {{docker_postgres_primary_slot_name}}
-        -D /mnt/{{docker_postgres_data_dir}}"
+      gosu postgres pg_basebackup -U {{ docker_postgres_primary_user }} -h {{ docker_postgres_primary_host }}
+        -p {{ docker_postgres_primary_port }} -S {{ docker_postgres_primary_slot_name }}
+        -D /mnt/{{ docker_postgres_data_dir }}"
     detach: false
   register: __out
   when:
@@ -96,14 +97,14 @@
 
 - name: Create postgresql.conf
   template:
-    src: "{{docker_postgres_conf}}"
-    dest: "{{docker_postgres_dir}}/{{docker_postgres_data_dir}}/postgresql.conf"
+    src: "{{ docker_postgres_conf }}"
+    dest: "{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/postgresql.conf"
   notify: plan to restart
 
 - name: Configure host based authentication (if entries are configured).
   template:
     src: "pg_hba.conf.j2"
-    dest: "{{docker_postgres_dir}}/{{docker_postgres_data_dir}}/pg_hba.conf"
+    dest: "{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/pg_hba.conf"
     owner: "999"
     mode: 0600
   notify: plan to restart
@@ -111,15 +112,15 @@
 
 - name: Ensure recovery.conf not exists
   file:
-    path: "{{docker_postgres_dir}}/{{docker_postgres_data_dir}}/recovery.conf"
+    path: "{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/recovery.conf"
     state: absent
   when: not docker_postgres_slave
   notify: plan to restart
 
 - name: Create recovery.conf
   template:
-    src: "{{docker_postgres_conf_recovery}}"
-    dest: "{{docker_postgres_dir}}/{{docker_postgres_data_dir}}/recovery.conf"
+    src: "{{ docker_postgres_conf_recovery }}"
+    dest: "{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/recovery.conf"
   when: docker_postgres_slave
   notify: plan to restart
 
@@ -127,46 +128,46 @@
 
 - name: Start database container
   docker_container:
-    name: "{{docker_postgres_container_name}}"
-    image: "{{docker_postgres_image}}"
+    name: "{{ docker_postgres_container_name }}"
+    image: "{{ docker_postgres_image }}"
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - "{{docker_postgres_dir}}:/mnt"
+      - "{{ docker_postgres_dir }}:/mnt"
     env:
-      PGDATA: /mnt/{{docker_postgres_data_dir}}
-    exposed_ports: "{{docker_postgres_exposed_ports}}"
-    published_ports: "{{docker_postgres_published_ports}}"
-    network_mode: "{{docker_postgres_network_mode}}"
-    pull: "{{__docker_postgres_restart | default(false)}}"
-    restart: "{{__docker_postgres_restart | default(false)}}"
+      PGDATA: /mnt/{{ docker_postgres_data_dir }}
+    exposed_ports: "{{ docker_postgres_exposed_ports }}"
+    published_ports: "{{ docker_postgres_published_ports }}"
+    network_mode: "{{ docker_postgres_network_mode }}"
+    pull: "{{ __docker_postgres_restart | default(false) }}"
+    restart: "{{ __docker_postgres_restart | default(false) }}"
     restart_policy: always
     command: "gosu postgres postgres"
     state: started
 
-- assert:
+- name: Assert docker container should be running
+  assert:
     that: docker_container["State"]["Status"] == 'running'
 
 - block:
-  - name: Ensure scripts dir exists
-    file:
-      path: "{{docker_postgres_dir}}/{{docker_postgres_scripts_dir}}"
-      mode: "0700"
-      owner: "999"
-      state: directory
+    - name: Ensure scripts dir exists
+      file:
+        path: "{{ docker_postgres_dir }}/{{ docker_postgres_scripts_dir }}"
+        mode: "0700"
+        owner: "999"
+        state: directory
 
-  - name: Create replication slots configuration script
-    template:
-      src: scripts/repslots.sql
-      dest: "{{docker_postgres_dir}}/{{docker_postgres_scripts_dir}}/repslots.sql"
+    - name: Create replication slots configuration script
+      template:
+        src: scripts/repslots.sql
+        dest: "{{ docker_postgres_dir }}/{{ docker_postgres_scripts_dir }}/repslots.sql"
 
-  - name: Configure database replication slots
-    shell:
-      docker exec {{docker_postgres_container_name}}
-        psql -U postgres -t -q -1f '/mnt/{{docker_postgres_scripts_dir}}/repslots.sql'
-        --variable ON_ERROR_STOP=true
-    register: __pg_repslots
-    changed_when: (__pg_repslots.stdout | regex_search('(Droped|Added)'))
-
+    - name: Configure database replication slots
+      command:
+        docker exec {{ docker_postgres_container_name }}
+          psql -U postgres -t -q -1f '/mnt/{{ docker_postgres_scripts_dir }}/repslots.sql'
+          --variable ON_ERROR_STOP=true
+      register: __pg_repslots
+      changed_when: (__pg_repslots.stdout | regex_search('(Droped|Added)'))
   when:
     - not docker_postgres_slave
     - docker_postgres_replication_slots is defined

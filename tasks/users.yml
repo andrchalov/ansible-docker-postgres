@@ -5,11 +5,11 @@
     password: "{{ item.password | default(omit) }}"
     priv: "{{ item.priv | default(omit) }}"
     role_attr_flags: "{{ item.role_attr_flags | default(omit) }}"
-    encrypted: yes
+    encrypted: true
     db: "{{ item.db | default(omit) }}"
-    login_host: "{{ docker_postgres_host}}"
+    login_host: "{{ docker_postgres_host }}"
     login_password: "{{ docker_postgres_password }}"
     login_user: "postgres"
     state: "{{ item.state | default('present') }}"
   with_items: "{{ docker_postgres_users }}"
-  no_log: true
+  # no_log: true

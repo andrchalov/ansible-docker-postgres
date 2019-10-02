@@ -1,5 +1,6 @@
 ---
 docker_postgres_image: andrchalov/docker-postgres:latest
+docker_postgres_dir: /srv/postgres
 docker_postgres_data_dir: data
 docker_postgres_slave: false
 docker_postgres_container_name: postgres
@@ -20,29 +21,32 @@ docker_postgres_primary_port: 5432
 docker_postgres_primary_user: postgres
 docker_postgres_primary_password: ''
 docker_postgres_primary_sslmode: require
-docker_postgres_primary_conninfo: "host={{docker_postgres_primary_host}} port={{docker_postgres_primary_port}} user={{docker_postgres_primary_user}} password={{docker_postgres_primary_password}} sslmode={{docker_postgres_primary_sslmode}}"
+docker_postgres_primary_conninfo: "\
+  host={{docker_postgres_primary_host}} port={{docker_postgres_primary_port}} \
+  user={{docker_postgres_primary_user}} password={{docker_postgres_primary_password}} \
+  sslmode={{docker_postgres_primary_sslmode}}"
 docker_postgres_trigger_file: 'stop_replication_trigger'
 
 docker_postgres_hba_entries:
-  - { type: local, database: all, user: postgres, auth_method: peer }
-  - { type: local, database: all, user: all, auth_method: peer }
-  - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5 }
-  - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
+  - {type: local, database: all, user: postgres, auth_method: peer}
+  - {type: local, database: all, user: all, auth_method: peer}
+  - {type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5}
+  - {type: host, database: all, user: all, address: '::1/128', auth_method: md5}
 
 docker_postgres_users: []
 docker_postgres_databases: []
 
 docker_postgres_scripts_dir: ".ansible"
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # postgres.conf configuration
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # CONNECTIONS AND AUTHENTICATION
 docker_postgres_conf_max_connections: 100
 docker_postgres_conf_superuser_reserved_connections: 3
 docker_postgres_conf_authentication_timeout: 1min             # 1s-600s
-docker_postgres_conf_ssl: on                                  # on, off
+docker_postgres_conf_ssl: "on"                                # on, off
 docker_postgres_conf_ssl_chiphers: 'HIGH:MEDIUM:+3DES:!aNULL'
 docker_postgres_conf_password_encryption: md5                 # md5 or scram-sha-256
 docker_postgres_conf_tcp_keepalives_idle: 0
@@ -60,8 +64,8 @@ docker_postgres_conf_maintenance_work_mem: 64MB
 docker_postgres_conf_shared_preload_libraries: ''
 
 # WRITE AHEAD LOG
-docker_postgres_conf_synchronous_commit: on
-docker_postgres_conf_wal_compression: off
+docker_postgres_conf_synchronous_commit: "on"
+docker_postgres_conf_wal_compression: "off"
 docker_postgres_conf_wal_writer_delay: 200ms        # 1-10000 milliseconds
 docker_postgres_conf_wal_writer_flush_after: 1MB    # measured in pages, 0 disables
 docker_postgres_conf_commit_delay: 0                # range 0-100000, in microseconds
@@ -72,7 +76,7 @@ docker_postgres_conf_min_wal_size: 80MB
 docker_postgres_conf_checkpoint_completion_target: 0.5   # checkpoint target duration, 0.0 - 1.0
 docker_postgres_conf_checkpoint_flush_after: 256kB       # measured in pages, 0 disables
 docker_postgres_conf_checkpoint_waiting: 30s             # 0 disables
-docker_postgres_conf_archive_mode: off                   # enables archiving; off, on, or always
+docker_postgres_conf_archive_mode: "off"                 # enables archiving; off, on, or always
 docker_postgres_conf_archive_command: ''
 docker_postgres_conf_archive_timeout: 0
 
@@ -83,9 +87,9 @@ docker_postgres_conf_wal_keep_segments: 0           # in logfile segments, 16MB 
 docker_postgres_conf_wal_sender_timeout: 60s        # in milliseconds; 0 disables
 docker_postgres_conf_max_replication_slots: 10
 docker_postgres_conf_synchronous_standby_names: ''
-docker_postgres_conf_hot_standby: on                # "off" disallows queries during recovery
+docker_postgres_conf_hot_standby: "on"              # "off" disallows queries during recovery
 docker_postgres_conf_max_standby_archive_delay: 30s
-docker_postgres_conf_hot_standby_feedback: off      # send info from standby to prevent
+docker_postgres_conf_hot_standby_feedback: "off"    # send info from standby to prevent
 
 # ERROR REPORTING AND LOGGING
 
