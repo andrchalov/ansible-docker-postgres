@@ -12,4 +12,4 @@
     login_user: "{{ docker_postgres_user }}"
     state: "{{ item.state | default('present') }}"
   with_items: "{{ docker_postgres_users }}"
-  # no_log: true
+  no_log: true
