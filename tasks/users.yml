@@ -9,7 +9,7 @@
     db: "{{ item.db | default(omit) }}"
     login_host: "{{ docker_postgres_host}}"
     login_password: "{{ docker_postgres_password }}"
-    login_user: "postgres"
+    login_user: "{{ docker_postgres_user }}"
     state: "{{ item.state | default('present') }}"
   with_items: "{{ docker_postgres_users }}"
-  no_log: true
+  # no_log: true

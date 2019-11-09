@@ -176,3 +176,6 @@
 
 - import_tasks: databases.yml
   when: not docker_postgres_slave
+
+- import_tasks: languages.yml
+  when: not docker_postgres_slave
