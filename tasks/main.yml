@@ -39,12 +39,20 @@
         env:
           PGDATA: "/mnt/{{ docker_postgres_data_dir }}"
           POSTGRES_PASSWORD: "{{ docker_postgres_password }}"
-          POSTGRES_INITONLY: "true"
         pull: true
         state: started
-        interactive: true
-        detach: false
+        interactive: false
+        detach: true
       when: not __pg_version.stat.exists
+
+    - name: Wait a little
+      shell: sleep 10
+
+    - name: Remove postgres initialization contatiner
+      docker_container:
+        name: docker_postgres_initdb
+        image: "{{ docker_postgres_image }}"
+        state: absent
 
     - name: Check that postgres cluster initialized
       stat: path="{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/PG_VERSION"
@@ -54,12 +62,6 @@
       assert:
         that: __pg_cluster.stat.exists
 
-    - name: Remove postgres initialization contatiner
-      docker_container:
-        name: docker_postgres_initdb
-        image: "{{ docker_postgres_image }}"
-        state: absent
-
     - name: Generate postgres default self-signed certificate
       shell: creates={{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.crt
         openssl req
@@ -67,7 +69,6 @@
           -nodes
           -days 3650
           -subj '/C=CA/ST=QC/L=Montreal/O=Company Name/CN={{ inventory_hostname }}'
-          -newkey rsa:1024
           -keyout {{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.key
           -out {{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.crt
         && chmod 600 {{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.key {{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/server.crt
@@ -110,19 +111,32 @@
   notify: plan to restart
   when: docker_postgres_hba_entries
 
-- name: Ensure recovery.conf not exists
+- name: Ensure recovery.conf not exists, becouse it not needed after 12 version
   file:
     path: "{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/recovery.conf"
+    state: absent
+  notify: plan to restart
+
+- name: Create standby.signal file
+  file:
+    path: "{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/standby.signal"
+    state: touch
+  when: docker_postgres_slave
+  notify: plan to restart
+
+- name: Remove standby.signal file
+  file:
+    path: "{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/standby.signal"
     state: absent
   when: not docker_postgres_slave
   notify: plan to restart
 
-- name: Create recovery.conf
-  template:
-    src: "{{ docker_postgres_conf_recovery }}"
-    dest: "{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/recovery.conf"
-  when: docker_postgres_slave
-  notify: plan to restart
+# - name: Create recovery.conf
+#   template:
+#     src: "{{ docker_postgres_conf_recovery }}"
+#     dest: "{{ docker_postgres_dir }}/{{ docker_postgres_data_dir }}/recovery.conf"
+#   when: docker_postgres_slave
+#   notify: plan to restart
 
 - meta: flush_handlers
 
@@ -138,7 +152,7 @@
     exposed_ports: "{{ docker_postgres_exposed_ports }}"
     published_ports: "{{ docker_postgres_published_ports }}"
     network_mode: "{{ docker_postgres_network_mode }}"
-    pull: "{{ __docker_postgres_restart | default(false) }}"
+    pull: true #"{{ __docker_postgres_restart | default(false) }}"
     restart: "{{ __docker_postgres_restart | default(false) }}"
     restart_policy: always
     command: "gosu postgres postgres"
@@ -176,4 +190,7 @@
   when: not docker_postgres_slave
 
 - import_tasks: databases.yml
+  when: not docker_postgres_slave
+
+- import_tasks: languages.yml
   when: not docker_postgres_slave

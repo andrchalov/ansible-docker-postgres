@@ -1,5 +1,5 @@
 ---
-docker_postgres_image: andrchalov/docker-postgres:latest
+docker_postgres_image: andrchalov/docker-postgres:12.2
 docker_postgres_dir: /srv/postgres
 docker_postgres_data_dir: data
 docker_postgres_slave: false
