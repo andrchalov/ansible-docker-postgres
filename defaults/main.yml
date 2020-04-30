@@ -6,6 +6,7 @@ docker_postgres_slave: false
 docker_postgres_container_name: postgres
 docker_postgres_host: 172.18.0.1
 docker_postgres_port: 5432
+docker_postgres_user: postgres
 docker_postgres_password: ''
 
 docker_postgres_network_mode: bridge
@@ -35,6 +36,7 @@ docker_postgres_hba_entries:
 
 docker_postgres_users: []
 docker_postgres_databases: []
+docker_postgres_languages: []
 
 docker_postgres_scripts_dir: ".ansible"
 
