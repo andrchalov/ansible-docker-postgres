@@ -151,8 +151,9 @@
       PGDATA: /mnt/{{ docker_postgres_data_dir }}
     exposed_ports: "{{ docker_postgres_exposed_ports }}"
     published_ports: "{{ docker_postgres_published_ports }}"
+    shm_size: "{{docker_postgres_shm_size}}"
     network_mode: "{{ docker_postgres_network_mode }}"
-    pull: true #"{{ __docker_postgres_restart | default(false) }}"
+    pull: "{{ __docker_postgres_restart | default(false) }}"
     restart: "{{ __docker_postgres_restart | default(false) }}"
     restart_policy: always
     command: "gosu postgres postgres"
